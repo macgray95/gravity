@@ -1,5 +1,7 @@
 #include "Planet.h"
 
+Planet::Planet(){};
+
 Planet::Planet(long double m, double x_p, double y_p, double x_v, double y_v, SDL_Surface img)
 {
   x_pos = x_p;
@@ -72,4 +74,34 @@ void Planet::set_force(Vector2d force)
 
   x_acc += x / mass;
   y_acc += y / mass;
+}
+
+void Planet::set_x_vel(double v)
+{
+  x_vel = v;
+}
+
+void Planet::set_y_vel(double v)
+{
+  y_vel = v;
+}
+
+void Planet::set_mass(long double m)
+{
+  mass = m;
+}
+
+void Planet::set_x_pos(double x)
+{
+  x_pos = x;
+}
+
+void Planet::set_y_pos(double y)
+{
+  y_pos = y;
+}
+
+void Planet::set_pic(SDL_Surface img)
+{
+  pic = img;
 }

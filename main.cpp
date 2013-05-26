@@ -1,6 +1,5 @@
 /*
 TODO: 
-   Allow placing of planets with the mouse
    Allow the user to edit the mass of the planets
    Allow screen resizing
    Optimize it bish
@@ -12,9 +11,13 @@ TODO:
 #include <time.h>
 #include <vector>
 
-const int SCREEN_BPP	= 32;
+#ifndef SCREEN_WIDTH
+#define SCREEN_WIDTH 640
+#define SCREEN_HEIGHT 480
+#endif
 
-const int FPS_LIMIT     = 30;
+const int SCREEN_BPP	= 32;
+const int FPS_LIMIT     = 60;
 
 SDL_Surface *earth_pic	= NULL;
 SDL_Surface *moon_pic	= NULL;
@@ -84,21 +87,13 @@ int main( int argc, char* args[] )
   //Load in all the pictures here
   moon_pic  = load_image("img/moon_pic.png");
   bg_pic    = load_image("img/bg_pic.png");
-  sun_pic   = load_image("img/sun_pic.png");
   earth_pic = load_image("img/earth_pic.png");
   pause_pic = load_image("img/pause_pic.png");
   
   //Placing some number of planets in random positions
   srand(time(NULL));
 
-  Planet earth = Planet(5.972 * pow(10, 24), rand() % (SCREEN_WIDTH - 64) + 32, rand() % (SCREEN_HEIGHT - 64) + 32, 0, 0, *earth_pic);
-  Planet moon = Planet(7.348 * pow(10, 22), rand() % (SCREEN_WIDTH - 32) + 16, rand() % (SCREEN_HEIGHT - 32) + 16, 0, 0, *moon_pic);
-  Planet moon2 = Planet(7.348 * pow(10, 22), rand() % (SCREEN_WIDTH - 32) + 16, rand() % (SCREEN_HEIGHT - 32) + 16, 0, 0, *moon_pic);
-
   std::vector<Planet> planets;
-  planets.push_back(earth);
-  planets.push_back(moon);
-  planets.push_back(moon2);
 
   GravityHandler grav;
 
@@ -108,7 +103,9 @@ int main( int argc, char* args[] )
       apply_surface(planets.at(i).get_x_pos(), planets.at(i).get_y_pos(), planets.at(i).get_pic(), screen);
 	
   int fps_init = 0;
+
   bool paused = false;
+  bool usr_paused = false;
   while( !quit )
     {
       fps_init = SDL_GetTicks();
@@ -120,23 +117,64 @@ int main( int argc, char* args[] )
 	    planets.at(i).handle_events(event);
 	  if(event.type == SDL_KEYDOWN)
 	    {
-	      switch(event.key.keysym.sym)
-	      case SDLK_SPACE:
+	      if(event.key.keysym.sym == SDLK_SPACE)
 		{
-		  if(paused)
+		  if(usr_paused)
 		    SDL_WM_SetCaption("Gravity", NULL);
 		  else
 		    SDL_WM_SetCaption("Gravity -PAUSED-", NULL);
-		  paused = !paused;
+		  usr_paused = !usr_paused;
 		}
-	      break;
+	      else if(event.key.keysym.sym == SDLK_c)
+		planets.clear();
+
 	    }
-	  if(event.type == SDL_QUIT)
+	  
+	  if(event.type == SDL_MOUSEBUTTONDOWN)
+	    {
+	      Planet p;
+	      paused = true;
+	      if(event.button.button == SDL_BUTTON_RIGHT)
+		{
+		  p.set_mass(7.348 * pow(10, 22));
+		  p.set_pic(*moon_pic);
+		  p.set_x_pos(event.button.x - 16);
+		  p.set_y_pos(event.button.y - 16);
+		}
+
+	      else if(event.button.button == SDL_BUTTON_LEFT)
+		{		
+		  p.set_mass(5.972 * pow(10, 24));
+		  p.set_pic(*earth_pic);
+		  p.set_x_pos(event.button.x - 32);
+		  p.set_y_pos(event.button.y - 32);
+		}
+	      
+	      planets.push_back(p);
+	    }
+
+	  else if(event.type == SDL_MOUSEBUTTONUP)
+	    {
+	      if(event.button.button == SDL_BUTTON_LEFT)
+		{
+		  planets.at(planets.size() - 1).set_y_vel((double)(planets.at(planets.size() - 1).get_y_pos() + 32 - event.button.y) / (1000 * PI));
+		  planets.at(planets.size() - 1).set_x_vel(-(double)(planets.at(planets.size() - 1).get_x_pos() + 32 - event.button.x) / (1000 * PI));
+		}
+	      else if(event.button.button == SDL_BUTTON_RIGHT)
+		{
+		  planets.at(planets.size() - 1).set_y_vel((double)(planets.at(planets.size() - 1).get_y_pos() + 16 - event.button.y) / (1000 * PI));
+		  planets.at(planets.size() - 1).set_x_vel(-(double)(planets.at(planets.size() - 1).get_x_pos() + 16 - event.button.x) / (1000 * PI));
+		}
+	      paused = false;
+	    }
+
+	  else if(event.type == SDL_QUIT)
 	    quit = true;
-	}
+	  
+	}	
 
       //LOGIC
-      if(!paused)
+      if(!paused && !usr_paused)
 	{
 	  std::vector<Vector2d> forces;
       
@@ -166,6 +204,7 @@ int main( int argc, char* args[] )
 	  
 	  for(unsigned int i = 0; i < planets.size(); i++)
 	    planets.at(i).handle_logic();
+
 	}
 
       //run the time when paused or else the time gaps causes the planets to apache
@@ -179,15 +218,16 @@ int main( int argc, char* args[] )
       apply_surface( 0, 0, bg_pic, screen );
       for(unsigned int i = 0; i < planets.size(); i++)
 	apply_surface(planets.at(i).get_x_pos(), planets.at(i).get_y_pos(), planets.at(i).get_pic(), screen);
-      if(paused)
+      if(usr_paused)
 	apply_surface(0, 0, pause_pic, screen);
       
       
       if( SDL_Flip( screen ) == -1 )
 	return 1;
-      
+
       if((SDL_GetTicks() - fps_init) < 1000 / FPS_LIMIT )
 	SDL_Delay( ( 1000 / FPS_LIMIT ) - (SDL_GetTicks() - fps_init) );
+      
     }
 
   SDL_FreeSurface(earth_pic);
