@@ -1,3 +1,11 @@
+/*
+TODO: 
+   Allow placing of planets with the mouse
+   Allow the user to edit the mass of the planets
+   Allow screen resizing
+   Optimize it bish
+*/
+
 #include "Planet.h"
 #include "GravityHandler.h"
 #include <stdlib.h>
@@ -73,12 +81,14 @@ int main( int argc, char* args[] )
 	
   init();
 
+  //Load in all the pictures here
   moon_pic  = load_image("img/moon_pic.png");
   bg_pic    = load_image("img/bg_pic.png");
   sun_pic   = load_image("img/sun_pic.png");
   earth_pic = load_image("img/earth_pic.png");
   pause_pic = load_image("img/pause_pic.png");
   
+  //Placing some number of planets in random positions
   srand(time(NULL));
 
   Planet earth = Planet(5.972 * pow(10, 24), rand() % (SCREEN_WIDTH - 64) + 32, rand() % (SCREEN_HEIGHT - 64) + 32, 0, 0, *earth_pic);
@@ -158,7 +168,7 @@ int main( int argc, char* args[] )
 	    planets.at(i).handle_logic();
 	}
 
-      //run the time or else the time gaps causes the planets to apache
+      //run the time when paused or else the time gaps causes the planets to apache
       else
 	{
 	  for(unsigned int i = 0; i < planets.size(); i++)
@@ -180,9 +190,10 @@ int main( int argc, char* args[] )
 	SDL_Delay( ( 1000 / FPS_LIMIT ) - (SDL_GetTicks() - fps_init) );
     }
 
-  SDL_FreeSurface( earth_pic );
-  SDL_FreeSurface( moon_pic );
-  SDL_FreeSurface( bg_pic );
+  SDL_FreeSurface(earth_pic);
+  SDL_FreeSurface(moon_pic);
+  SDL_FreeSurface(sun_pic);
+  SDL_FreeSurface(bg_pic);
 
   SDL_Quit();
   return 0;  
