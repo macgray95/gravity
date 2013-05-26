@@ -1,0 +1,4 @@
+This is for a physics project I have to do. I'm essentially done with the basics, so now the hard part is adding the nice features like user input etc. If you come across this feel free to download and compile it with:
+make
+and then just run
+./gravity
