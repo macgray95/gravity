@@ -19,6 +19,8 @@ TODO:
 const int SCREEN_BPP	= 32;
 const int FPS_LIMIT     = 60;
 
+//Initialize all the surfaces here
+
 SDL_Surface *earth_pic	= NULL;
 SDL_Surface *moon_pic	= NULL;
 SDL_Surface *sun_pic    = NULL;
@@ -28,6 +30,7 @@ SDL_Surface *pause_pic  = NULL;
 
 SDL_Event event;
 
+//Loads and optimizes an image
 SDL_Surface *load_image( std::string filename )
 {
   SDL_Surface* loaded_image = NULL;
@@ -51,6 +54,7 @@ SDL_Surface *load_image( std::string filename )
 	
 }
 
+//Applies a given surface to the screen
 void apply_surface( int x, int y, SDL_Surface* source, SDL_Surface* dest )
 {
   SDL_Rect offset;
@@ -62,6 +66,7 @@ void apply_surface( int x, int y, SDL_Surface* source, SDL_Surface* dest )
 	
 }
 
+//Initializes SDL and the video mode, quits if anything goes wrong
 bool init()
 {
   if( SDL_Init( SDL_INIT_EVERYTHING ) == -1 )
@@ -77,6 +82,7 @@ bool init()
   return true;
 }
 
+
 int main( int argc, char* args[] )
 {
  	
@@ -90,8 +96,6 @@ int main( int argc, char* args[] )
   earth_pic = load_image("img/earth_pic.png");
   pause_pic = load_image("img/pause_pic.png");
   
-  //Placing some number of planets in random positions
-  srand(time(NULL));
 
   std::vector<Planet> planets;
 
@@ -99,9 +103,6 @@ int main( int argc, char* args[] )
 
   apply_surface( 0, 0, bg_pic, screen );
 
-  for(unsigned int i = 0; i < planets.size(); i++)
-      apply_surface(planets.at(i).get_x_pos(), planets.at(i).get_y_pos(), planets.at(i).get_pic(), screen);
-	
   int fps_init = 0;
 
   bool paused = false;
@@ -118,13 +119,8 @@ int main( int argc, char* args[] )
 	  if(event.type == SDL_KEYDOWN)
 	    {
 	      if(event.key.keysym.sym == SDLK_SPACE)
-		{
-		  if(usr_paused)
-		    SDL_WM_SetCaption("Gravity", NULL);
-		  else
-		    SDL_WM_SetCaption("Gravity -PAUSED-", NULL);
 		  usr_paused = !usr_paused;
-		}
+
 	      else if(event.key.keysym.sym == SDLK_c)
 		planets.clear();
 
@@ -219,8 +215,12 @@ int main( int argc, char* args[] )
       for(unsigned int i = 0; i < planets.size(); i++)
 	apply_surface(planets.at(i).get_x_pos(), planets.at(i).get_y_pos(), planets.at(i).get_pic(), screen);
       if(usr_paused)
-	apply_surface(0, 0, pause_pic, screen);
-      
+	{
+	  apply_surface(0, 0, pause_pic, screen);
+	  SDL_WM_SetCaption("Gravity -PAUSED-", NULL);
+	}
+      else
+	SDL_WM_SetCaption("Gravity", NULL);
       
       if( SDL_Flip( screen ) == -1 )
 	return 1;
